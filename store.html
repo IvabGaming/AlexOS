@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlexOS // App Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cyan:   #00f5ff;
+      --pink:   #ff006e;
+      --yellow: #ffcc00;
+      --green:  #39ff14;
+      --dark:   #050510;
+      --mid:    #0a0a20;
+      --grid:   rgba(0,245,255,0.05);
+      --text:   #e0e8ff;
+      --sub:    rgba(224,232,255,0.45);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid + scanlines */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+      );
+      pointer-events: none;
+      z-index: 0;
+      animation: scan 10s linear infinite;
+    }
+    @keyframes scan { to { background-position: 0 100px; } }
+
+    /* Topbar */
+    #topbar {
+      position: sticky; top: 0;
+      z-index: 50;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 20px;
+      height: 48px;
+      background: rgba(5,5,16,0.96);
+      border-bottom: 1px solid rgba(0,245,255,0.25);
+      box-shadow: 0 0 20px rgba(0,245,255,0.08);
+    }
+    #topbar .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--cyan);
+      text-shadow: 0 0 12px var(--cyan);
+      white-space: nowrap;
+    }
+    #topbar .logo span {
+      color: var(--pink);
+      text-shadow: 0 0 12px var(--pink);
+    }
+    #topbar .divider { flex: 1; }
+    #back-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 2px;
+      padding: 5px 14px;
+      border: 1px solid rgba(0,245,255,0.4);
+      background: transparent;
+      color: var(--cyan);
+      cursor: pointer !important;
+      transition: all 0.15s;
+      clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+    }
+    #back-btn:hover {
+      background: var(--cyan);
+      color: var(--dark);
+    }
+
+    /* Hero */
+    #hero {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 40px 20px 28px;
+      border-bottom: 1px solid rgba(0,245,255,0.1);
+    }
+    #hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.4rem, 5vw, 2.4rem);
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--cyan);
+      text-shadow: 0 0 24px var(--cyan), 0 0 60px rgba(0,245,255,0.3);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    #hero h1 span { color: var(--pink); text-shadow: 0 0 24px var(--pink); }
+    @keyframes pulse { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.25)} }
+    #hero p {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      color: var(--sub);
+      animation: blink 2.5s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:0.7} 50%{opacity:0.25} }
+
+    /* Filter bar */
+    #filter-bar {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .filter-label {
+      font-size: 0.6rem;
+      letter-spacing: 3px;
+      color: var(--sub);
+      margin-right: 4px;
+    }
+    .cat-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 2px;
+      padding: 5px 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer !important;
+      transition: all 0.15s;
+    }
+    .cat-btn:hover, .cat-btn.active {
+      border-color: var(--yellow);
+      color: var(--yellow);
+      box-shadow: 0 0 10px rgba(255,204,0,0.25);
+    }
+    #search-wrap { margin-left: auto; }
+    #search {
+      background: rgba(0,245,255,0.04);
+      border: 1px solid rgba(0,245,255,0.2);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      padding: 5px 12px;
+      outline: none;
+      width: 180px;
+      transition: border-color 0.2s;
+    }
+    #search:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,245,255,0.15); }
+    #search::placeholder { color: rgba(224,232,255,0.25); }
+
+    /* Stats bar */
+    #stats-bar {
+      position: relative; z-index: 1;
+      display: flex; gap: 20px;
+      padding: 10px 20px;
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: var(--sub);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    #stats-bar strong { color: var(--cyan); }
+
+    /* Grid */
+    #app-grid {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      padding: 20px;
+    }
+
+    /* App card */
+    .app-card {
+      background: rgba(10,10,32,0.8);
+      border: 1px solid rgba(0,245,255,0.12);
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      animation: fadeIn 0.4s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+    .app-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .app-card:hover {
+      border-color: rgba(0,245,255,0.4);
+      box-shadow: 0 0 20px rgba(0,245,255,0.08);
+      transform: translateY(-2px);
+    }
+    .app-card:hover::before { opacity: 1; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    .card-header { display: flex; align-items: flex-start; gap: 10px; }
+    .app-icon {
+      width: 38px; height: 38px;
+      border: 1px solid rgba(0,245,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      background: rgba(0,245,255,0.04);
+    }
+    .app-meta { flex: 1; min-width: 0; }
+    .app-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .app-version {
+      font-size: 0.58rem;
+      letter-spacing: 2px;
+      color: var(--sub);
+      margin-top: 2px;
+    }
+
+    .app-desc {
+      font-size: 0.68rem;
+      line-height: 1.5;
+      color: var(--sub);
+      flex: 1;
+    }
+
+    .card-footer { display: flex; align-items: center; gap: 8px; }
+    .cat-tag {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 2px;
+      padding: 3px 8px;
+      border: 1px solid rgba(255,204,0,0.3);
+      color: rgba(255,204,0,0.6);
+    }
+    .type-tag {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 2px;
+      padding: 3px 8px;
+    }
+    .type-tag.aexe { border: 1px solid rgba(0,245,255,0.3); color: rgba(0,245,255,0.6); }
+    .type-tag.esml { border: 1px solid rgba(57,255,20,0.3); color: rgba(57,255,20,0.6); }
+
+    .dl-btn {
+      margin-left: auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 2px;
+      padding: 6px 14px;
+      border: 1px solid var(--pink);
+      background: transparent;
+      color: var(--pink);
+      cursor: pointer !important;
+      transition: all 0.15s;
+      clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+      white-space: nowrap;
+    }
+    .dl-btn:hover {
+      background: var(--pink);
+      color: var(--dark);
+    }
+    .dl-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed !important;
+    }
+    .dl-btn.done {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* Empty / loading states */
+    #state-msg {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 60px 20px;
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      color: var(--sub);
+      display: none;
+    }
+    #state-msg.visible { display: block; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      padding: 10px 18px;
+      border: 1px solid var(--green);
+      background: rgba(5,5,16,0.95);
+      color: var(--green);
+      box-shadow: 0 0 16px rgba(57,255,20,0.2);
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Custom cursor */
+    #cursor { position: fixed; pointer-events: none; z-index: 9999; top: 0; left: 0; }
+    #cursor-dot {
+      width: 6px; height: 6px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--cyan), 0 0 20px var(--cyan);
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+    #cursor-cross { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; }
+    #cursor-cross::before, #cursor-cross::after {
+      content: ''; position: absolute;
+      background: var(--cyan); opacity: 0.8; box-shadow: 0 0 6px var(--cyan);
+    }
+    #cursor-cross::before { width: 24px; height: 1px; top: 50%; left: 0; transform: translateY(-50%); }
+    #cursor-cross::after  { width: 1px; height: 24px; left: 50%; top: 0; transform: translateX(-50%); }
+    body.cursor-hover #cursor-dot { background: var(--pink); box-shadow: 0 0 8px var(--pink), 0 0 20px var(--pink); }
+    body.cursor-hover #cursor-cross::before,
+    body.cursor-hover #cursor-cross::after { background: var(--pink); box-shadow: 0 0 6px var(--pink); }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div id="topbar">
+    <div class="logo">ALEX<span>OS</span> // STORE</div>
+    <div class="divider"></div>
+    <button id="back-btn" onclick="window.location.href='index.html'">← BACK</button>
+  </div>
+
+  <!-- Hero -->
+  <div id="hero">
+    <h1>APP <span>STORE</span></h1>
+    <p>// DOWNLOAD EXECUTABLES FOR ALEXOS //</p>
+  </div>
+
+  <!-- Filter bar -->
+  <div id="filter-bar">
+    <span class="filter-label">CATEGORY //</span>
+    <button class="cat-btn active" data-cat="all">ALL</button>
+    <div id="cat-buttons"></div>
+    <div id="search-wrap">
+      <input type="text" id="search" placeholder="// SEARCH //">
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div id="stats-bar">
+    <span>APPS <strong id="stat-count">0</strong></span>
+    <span>SHOWING <strong id="stat-showing">0</strong></span>
+  </div>
+
+  <!-- App grid -->
+  <div id="app-grid"></div>
+  <div id="state-msg">// NO APPS FOUND //</div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- Cursor -->
+  <div id="cursor">
+    <div id="cursor-dot"></div>
+    <div id="cursor-cross"></div>
+  </div>
+
+  <script>
+    // ── Cursor ──────────────────────────────────────────────
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+    });
+    function addHover(el) {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    }
+
+    // ── Toast ────────────────────────────────────────────────
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ── State ────────────────────────────────────────────────
+    let allApps = [];
+    let activeCategory = 'all';
+    let searchQuery = '';
+
+    // ── Fetch catalog ────────────────────────────────────────
+    // Place your catalog.json at the same directory as store.html
+    // or update this path to match your server structure.
+    const CATALOG_URL = 'https://aexe.ivabgaming.com/catalog.json';
+    // The base URL where your .aexe / .esml files are hosted.
+    const FILES_BASE  = 'https://aexe.ivabgaming.com/';
+
+    async function loadCatalog() {
+      document.getElementById('state-msg').textContent = '// LOADING CATALOG... //';
+      document.getElementById('state-msg').classList.add('visible');
+      try {
+        const res = await fetch(CATALOG_URL);
+        if (!res.ok) throw new Error('catalog not found');
+        const data = await res.json();
+        allApps = data.apps || [];
+        buildCategoryButtons();
+        renderGrid();
+      } catch (e) {
+        document.getElementById('state-msg').textContent = '// CATALOG UNAVAILABLE //';
+      }
+    }
+
+    // ── Category buttons ─────────────────────────────────────
+    function buildCategoryButtons() {
+      const cats = [...new Set(allApps.map(a => a.category).filter(Boolean))];
+      const wrap = document.getElementById('cat-buttons');
+      wrap.innerHTML = '';
+      cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn';
+        btn.textContent = cat.toUpperCase();
+        btn.dataset.cat = cat;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeCategory = cat;
+          renderGrid();
+        });
+        addHover(btn);
+        wrap.appendChild(btn);
+      });
+      // Wire up the ALL button
+      document.querySelector('[data-cat="all"]').addEventListener('click', function() {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        activeCategory = 'all';
+        renderGrid();
+      });
+      addHover(document.querySelector('[data-cat="all"]'));
+    }
+
+    // ── Search ───────────────────────────────────────────────
+    document.getElementById('search').addEventListener('input', function() {
+      searchQuery = this.value.toLowerCase();
+      renderGrid();
+    });
+
+    // ── Render ───────────────────────────────────────────────
+    function renderGrid() {
+      const grid = document.getElementById('app-grid');
+      const msg  = document.getElementById('state-msg');
+      grid.innerHTML = '';
+
+      let filtered = allApps;
+      if (activeCategory !== 'all') filtered = filtered.filter(a => a.category === activeCategory);
+      if (searchQuery) filtered = filtered.filter(a =>
+        a.name.toLowerCase().includes(searchQuery) ||
+        (a.description || '').toLowerCase().includes(searchQuery)
+      );
+
+      document.getElementById('stat-count').textContent   = allApps.length;
+      document.getElementById('stat-showing').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        msg.textContent = '// NO APPS FOUND //';
+        msg.classList.add('visible');
+        return;
+      }
+      msg.classList.remove('visible');
+
+      filtered.forEach((app, i) => {
+        const card = document.createElement('div');
+        card.className = 'app-card';
+        card.style.animationDelay = (i * 0.04) + 's';
+
+        const ext  = (app.file || '').split('.').pop().toLowerCase();
+        const icon = app.icon || '⬡';
+        const ver  = app.version ? 'v' + app.version : 'v1.0';
+        const desc = app.description || 'No description provided.';
+        const cat  = app.category || 'Uncategorized';
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="app-icon">${icon}</div>
+            <div class="app-meta">
+              <div class="app-name">${app.name}</div>
+              <div class="app-version">${ver}</div>
+            </div>
+          </div>
+          <div class="app-desc">${desc}</div>
+          <div class="card-footer">
+            <span class="cat-tag">${cat.toUpperCase()}</span>
+            <span class="type-tag ${ext}">.${ext.toUpperCase()}</span>
+            <button class="dl-btn" data-file="${app.file}" data-name="${app.name}">↓ GET</button>
+          </div>
+        `;
+
+        const dlBtn = card.querySelector('.dl-btn');
+        dlBtn.addEventListener('click', () => downloadApp(app, dlBtn));
+        addHover(dlBtn);
+
+        // hover cursor on card
+        card.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+        card.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+
+        grid.appendChild(card);
+      });
+    }
+
+    // ── Download ─────────────────────────────────────────────
+    async function downloadApp(app, btn) {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      try {
+        const url = FILES_BASE + app.file;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('File not found');
+        const content = await res.text();
+
+        const blob = new Blob([content], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = app.file;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+
+        btn.textContent = '✓ GOT';
+        btn.classList.add('done');
+        showToast('// ' + app.name.toUpperCase() + ' DOWNLOADED //');
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = '↓ GET';
+        showToast('// DOWNLOAD FAILED //');
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    loadCatalog();
+  </script>
+
+  <script src="https://os.ivabgaming.com/cursor.js"></script>
+</body>
+</html>

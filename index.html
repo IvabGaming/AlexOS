@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://os.ivabgaming.com/LocusOS/style.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="screen active">
+            <div class="menu-bg"></div>
+            <div class="scanlines"></div>
+            <div class="menu-content">
+                <div class="logo">
+                    <span class="logo-geo">Alex</span><span class="logo-dash"><button onclick="secert()" class="logo-v">O</button>S</span>
+                </div>
+                <p class="tagline" id="clock">// hh:mm:ss //</p> 
+                <div class="diff-btns">
+                    <button class="diff-btn" onclick="openWeb()">Connectivity Web Browser</button>
+                    <button class="diff-btn" onclick="openCalc()">Calculator</button>
+                    <button class="diff-btn" onclick="document.getElementById('aexePicker').click()">Open AlexOS Executable (.aexe) file</button>
+                    <input type="file" id="aexePicker" accept=".aexe" style="display:none">
+                    <button class="diff-btn" onclick="openStore()">AlexOS App Store</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function openWeb() {
+                window.location.href = 'browser.html';
+            }
+
+            function openCalc() {
+                window.location.href = 'calc.html';
+            }
+
+            (function() {
+                const time = document.getElementById('clock');
+
+                function updateClock() {
+                    if (!time) return;
+                    const date = new Date();
+                    time.textContent = date.toLocaleTimeString();
+                    time.textContent = "// " + time.textContent + " //";
+                }
+                setInterval(updateClock, 100);
+            })();
+
+            // Add this to your <script> block in index.html
+        document.getElementById('aexePicker').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+        const content = encodeURIComponent(ev.target.result);
+            const name = encodeURIComponent(file.name);
+            window.location.href = `aexe-runner.html?name=${name}&content=${content}`;
+        };
+        reader.readAsText(file);
+        });
+
+        function openStore() {
+            window.location.href = 'store.html';
+        }
+        </script>
+
+        <script src="https://os.ivabgaming.com/cursor.js"></script>
+    </body>
+</html>

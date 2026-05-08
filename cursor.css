@@ -1,0 +1,55 @@
+  *, *::before, *::after { cursor: none !important; }
+
+  #cursor {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    top: 0; left: 0;
+  }
+
+  #cursor-dot {
+    width: 6px; height: 6px;
+    background: var(--neon-cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+
+  #cursor-cross {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 24px; height: 24px;
+  }
+
+  #cursor-cross::before,
+  #cursor-cross::after {
+    content: '';
+    position: absolute;
+    background: var(--neon-cyan);
+    opacity: 0.8;
+    box-shadow: 0 0 6px var(--neon-cyan);
+  }
+
+  #cursor-cross::before {
+    width: 24px; height: 1px;
+    top: 50%; left: 0;
+    transform: translateY(-50%);
+  }
+
+  #cursor-cross::after {
+    width: 1px; height: 24px;
+    left: 50%; top: 0;
+    transform: translateX(-50%);
+  }
+
+  body.cursor-hover #cursor-dot {
+    background: var(--neon-pink);
+    box-shadow: 0 0 8px var(--neon-pink), 0 0 20px var(--neon-pink);
+  }
+
+  body.cursor-hover #cursor-cross::before,
+  body.cursor-hover #cursor-cross::after {
+    background: var(--neon-pink);
+    box-shadow: 0 0 6px var(--neon-pink);
+  }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    #runner-frame {
+      width: 100vw;
+      height: calc(100vh - 40px);
+      border: none;
+      display: block;
+      margin-top: 40px;
+    }
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 40px;
+      background: var(--mid-bg);
+      border-bottom: 1px solid var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+      z-index: 100;
+    }
+    #app-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 3px;
+      color: var(--neon-cyan);
+      flex: 1;
+    }
+    #exit-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      padding: 4px 12px;
+      border: 1px solid var(--neon-pink);
+      background: transparent;
+      color: var(--neon-pink);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #exit-btn:hover {
+      background: var(--neon-pink);
+      color: var(--dark-bg);
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <span id="app-title">// LOADING... //</span>
+    <button id="exit-btn" onclick="window.location.href='index.html'">✕ EXIT</button>
+  </div>
+  <iframe id="runner-frame" sandbox="allow-scripts"></iframe>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const content = params.get('content');
+    const name = params.get('name') || 'UNKNOWN.aexe';
+
+    document.getElementById('app-title').textContent = '// ' + name.toUpperCase() + ' //';
+
+    if (content) {
+      document.getElementById('runner-frame').srcdoc = decodeURIComponent(content);
+    } else {
+      document.getElementById('runner-frame').srcdoc = '<p style="color:red">No content provided.</p>';
+    }
+  </script>
+  <script src="https://os.ivabgaming.com/cursor.js"></script>
+</body>
+</html>
