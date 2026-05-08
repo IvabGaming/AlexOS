@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AlexOS // App Store</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://os.ivabgaming.com/root.css">
   <style>
     :root {
       --cyan:   #00f5ff;
@@ -324,6 +323,27 @@
       pointer-events: none;
     }
     #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Custom cursor */
+    #cursor { position: fixed; pointer-events: none; z-index: 9999; top: 0; left: 0; }
+    #cursor-dot {
+      width: 6px; height: 6px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--cyan), 0 0 20px var(--cyan);
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+    #cursor-cross { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; }
+    #cursor-cross::before, #cursor-cross::after {
+      content: ''; position: absolute;
+      background: var(--cyan); opacity: 0.8; box-shadow: 0 0 6px var(--cyan);
+    }
+    #cursor-cross::before { width: 24px; height: 1px; top: 50%; left: 0; transform: translateY(-50%); }
+    #cursor-cross::after  { width: 1px; height: 24px; left: 50%; top: 0; transform: translateX(-50%); }
+    body.cursor-hover #cursor-dot { background: var(--pink); box-shadow: 0 0 8px var(--pink), 0 0 20px var(--pink); }
+    body.cursor-hover #cursor-cross::before,
+    body.cursor-hover #cursor-cross::after { background: var(--pink); box-shadow: 0 0 6px var(--pink); }
   </style>
 </head>
 <body>
@@ -371,6 +391,17 @@
   </div>
 
   <script>
+    // ── Cursor ──────────────────────────────────────────────
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+    });
+    function addHover(el) {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    }
+
     // ── Toast ────────────────────────────────────────────────
     const toast = document.getElementById('toast');
     let toastTimer;
@@ -538,7 +569,5 @@
     // ── Init ─────────────────────────────────────────────────
     loadCatalog();
   </script>
-
-  <script src="https://os.ivabgaming.com/cursor.js"></script>
 </body>
 </html>
