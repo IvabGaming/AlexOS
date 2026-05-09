@@ -1,71 +1,299 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
-    #runner-frame {
-      width: 100vw;
-      height: calc(100vh - 40px);
-      border: none;
-      display: block;
-      margin-top: 40px;
+    :root {
+      --neon-cyan: #00f5ff;
+      --neon-pink: #ff006e;
+      --neon-yellow: #ffcc00;
+      --neon-green: #39ff14;
+      --dark-bg: #050510;
+      --mid-bg: #0a0a20;
+      --text: #e0e8ff;
     }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+
+    body {
+      background: var(--dark-bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Grid overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,245,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.25) 2px, rgba(0,0,0,0.25) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+      animation: scanMove 8s linear infinite;
+    }
+    @keyframes scanMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100px; }
+    }
+
+    /* Topbar */
     #topbar {
       position: fixed;
       top: 0; left: 0; right: 0;
-      height: 40px;
-      background: var(--mid-bg);
-      border-bottom: 1px solid var(--neon-cyan);
+      height: 38px;
+      background: linear-gradient(90deg, rgba(5,5,16,0.98), rgba(10,10,32,0.98));
+      border-bottom: 1px solid rgba(0,245,255,0.4);
+      box-shadow: 0 0 12px rgba(0,245,255,0.15);
       display: flex;
       align-items: center;
-      padding: 0 12px;
-      gap: 12px;
+      padding: 0 14px;
+      gap: 10px;
       z-index: 100;
     }
+
+    #type-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 2px;
+      padding: 3px 8px;
+      border: 1px solid var(--neon-yellow);
+      color: var(--neon-yellow);
+      text-shadow: 0 0 6px var(--neon-yellow);
+      box-shadow: 0 0 8px rgba(255,204,0,0.2);
+    }
+
     #app-title {
       font-family: 'Orbitron', sans-serif;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       letter-spacing: 3px;
       color: var(--neon-cyan);
+      text-shadow: 0 0 8px var(--neon-cyan);
       flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
     #exit-btn {
       font-family: 'Orbitron', sans-serif;
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       letter-spacing: 2px;
-      padding: 4px 12px;
+      padding: 5px 14px;
       border: 1px solid var(--neon-pink);
       background: transparent;
       color: var(--neon-pink);
-      cursor: pointer;
-      transition: all 0.2s;
+      text-shadow: 0 0 6px var(--neon-pink);
+      box-shadow: 0 0 8px rgba(255,0,110,0.15);
+      cursor: pointer !important;
+      transition: all 0.15s;
+      clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
     }
     #exit-btn:hover {
       background: var(--neon-pink);
       color: var(--dark-bg);
+      text-shadow: none;
     }
+
+    /* Runner frame */
+    #runner-frame {
+      position: fixed;
+      top: 38px; left: 0; right: 0; bottom: 0;
+      width: 100%;
+      height: calc(100vh - 38px);
+      border: none;
+      display: block;
+      z-index: 2;
+    }
+
+    /* Error state */
+    #error-msg {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      color: var(--neon-pink);
+      text-shadow: 0 0 12px var(--neon-pink);
+      text-align: center;
+      z-index: 200;
+    }
+
+    /* Custom cursor */
+    #cursor { position: fixed; pointer-events: none; z-index: 9999; top: 0; left: 0; }
+    #cursor-dot {
+      width: 6px; height: 6px;
+      background: var(--neon-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+    #cursor-cross { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; }
+    #cursor-cross::before, #cursor-cross::after {
+      content: ''; position: absolute;
+      background: var(--neon-cyan); opacity: 0.8;
+      box-shadow: 0 0 6px var(--neon-cyan);
+    }
+    #cursor-cross::before { width: 24px; height: 1px; top: 50%; left: 0; transform: translateY(-50%); }
+    #cursor-cross::after  { width: 1px; height: 24px; left: 50%; top: 0; transform: translateX(-50%); }
+    body.cursor-hover #cursor-dot { background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink), 0 0 20px var(--neon-pink); }
+    body.cursor-hover #cursor-cross::before,
+    body.cursor-hover #cursor-cross::after { background: var(--neon-pink); box-shadow: 0 0 6px var(--neon-pink); }
   </style>
 </head>
 <body>
+
   <div id="topbar">
+    <span id="type-badge">AEXE</span>
     <span id="app-title">// LOADING... //</span>
     <button id="exit-btn" onclick="window.location.href='index.html'">✕ EXIT</button>
   </div>
-  <iframe id="runner-frame" sandbox="allow-scripts"></iframe>
+
+  <iframe id="runner-frame" sandbox="allow-scripts allow-forms"></iframe>
+  <div id="error-msg">// NO CONTENT LOADED //</div>
+
+  <!-- Custom cursor -->
+  <div id="cursor">
+    <div id="cursor-dot"></div>
+    <div id="cursor-cross"></div>
+  </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const content = params.get('content');
-    const name = params.get('name') || 'UNKNOWN.aexe';
+    // Cursor
+    const cursor = document.getElementById('cursor');
+    const dot = document.getElementById('cursor-dot');
+    const cross = document.getElementById('cursor-cross');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+      dot.style.left    = '0px'; dot.style.top = '0px';
+      cross.style.left  = '0px'; cross.style.top = '0px';
+    });
+    document.querySelectorAll('button, a, input').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    });
 
-    document.getElementById('app-title').textContent = '// ' + name.toUpperCase() + ' //';
+    // ESML translator source (inlined so it works inside sandboxed srcdoc)
+    const ESML_TRANSLATOR_SRC = `
+      const ESML_REGISTRY = {
+        'txt': {htmlTag: 'p', baseClass: 'content-style' },
+        'divider': {htmlTag: 'div', baseClass: 'container-style' },
+        'btn': {htmlTag: 'button', baseClass: 'button-style' },
+        'pic': {htmlTag: 'img', baseClass: 'pic-style' },
+        'css': {htmlTag: 'style', baseClass: 'css-style' },
+        'video': {htmlTag: 'video', baseClass: 'video-style' },
+        'audio': {htmlTag: 'audio', baseClass: 'audio-style' },
+        'iframe': {htmlTag: 'iframe', baseClass: 'iframe-style' },
+        'list': {htmlTag: 'ul', baseClass: 'list-style' },
+        'item': {htmlTag: 'li', baseClass: 'item-style' },
+        'link': {htmlTag: 'a', baseClass: 'link-style' },
+        'input': {htmlTag: 'input', baseClass: 'input-style' },
+        'form': {htmlTag: 'form', baseClass: 'form-style' },
+        'table': {htmlTag: 'table', baseClass: 'table-style' },
+        'row': {htmlTag: 'tr', baseClass: 'row-style' },
+        'cell': {htmlTag: 'td', baseClass: 'cell-style' },
+        'top': {htmlTag: 'header', baseClass: 'header-style' },
+        'bottom': {htmlTag: 'footer', baseClass: 'footer-style' },
+        'section': {htmlTag: 'section', baseClass: 'section-style' },
+        'nav': {htmlTag: 'nav', baseClass: 'nav-style' },
+        'article': {htmlTag: 'article', baseClass: 'article-style' },
+        'aside': {htmlTag: 'aside', baseClass: 'aside-style' },
+        'main': {htmlTag: 'main', baseClass: 'main-style' },
+        'span': {htmlTag: 'span', baseClass: 'span-style' },
+        'head': {htmlTag: 'head', baseClass: 'head-style' },
+        'body': {htmlTag: 'body', baseClass: 'body-style' },
+        'esml': {htmlTag: 'html', baseClass: 'esml-style' },
+        'input-label': {htmlTag: 'label', baseClass: 'input-label-style' },
+        'checkbox': {htmlTag: 'input', baseClass: 'checkbox-style' },
+        'radio': {htmlTag: 'input', baseClass: 'radio-style' },
+        'select': {htmlTag: 'select', baseClass: 'select-style' },
+        'option': {htmlTag: 'option', baseClass: 'option-style' },
+        'textarea': {htmlTag: 'textarea', baseClass: 'textarea-style' },
+        'button-group': {htmlTag: 'div', baseClass: 'button-group-style' },
+        'card': {htmlTag: 'div', baseClass: 'card-style' },
+        'modal': {htmlTag: 'div', baseClass: 'modal-style' },
+        'tooltip': {htmlTag: 'div', baseClass: 'tooltip-style' },
+        'dropdown': {htmlTag: 'div', baseClass: 'dropdown-style' },
+        'badge': {htmlTag: 'span', baseClass: 'badge-style' },
+        'alert': {htmlTag: 'div', baseClass: 'alert-style' },
+        'js': {htmlTag: 'script', baseClass: 'js-style' },
+        'estitle': {htmlTag: 'h1', baseClass: 'title-style' },
+        'webtitle': {htmlTag: 'title', baseClass: 'webtitle-style' },
+      };
+      function translateESML(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const elements = container.querySelectorAll('*');
+        for (let i = elements.length - 1; i >= 0; i--) {
+          const el = elements[i];
+          const tagName = el.tagName.toLowerCase();
+          const config = ESML_REGISTRY[tagName];
+          if (config) {
+            const replacement = document.createElement(config.htmlTag);
+            replacement.innerHTML = el.innerHTML;
+            replacement.className = config.baseClass;
+            for (let attr of el.attributes) replacement.setAttribute(attr.name, attr.value);
+            el.replaceWith(replacement);
+          }
+        }
+      }
+      window.addEventListener('DOMContentLoaded', () => translateESML('app-root'));
+    `;
 
-    if (content) {
-      document.getElementById('runner-frame').srcdoc = decodeURIComponent(content);
+    // Load content from sessionStorage
+    const content = sessionStorage.getItem('aexe_content');
+    const name    = sessionStorage.getItem('aexe_name') || 'UNKNOWN';
+    const type    = sessionStorage.getItem('aexe_type') || 'html';
+
+    const frame = document.getElementById('runner-frame');
+    const badge = document.getElementById('type-badge');
+    const title = document.getElementById('app-title');
+
+    title.textContent = '// ' + name.toUpperCase() + ' //';
+
+    if (!content) {
+      document.getElementById('error-msg').style.display = 'block';
+    } else if (type === 'esml') {
+      badge.textContent = 'ESML';
+      badge.style.borderColor = 'var(--neon-green)';
+      badge.style.color = 'var(--neon-green)';
+      badge.style.textShadow = '0 0 6px var(--neon-green)';
+      badge.style.boxShadow = '0 0 8px rgba(57,255,20,0.2)';
+
+      frame.srcdoc = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+  <div id="app-root">${content}</div>
+  <script>${ESML_TRANSLATOR_SRC}<\/script>
+</body>
+</html>`;
     } else {
-      document.getElementById('runner-frame').srcdoc = '<p style="color:red">No content provided.</p>';
+      // .aexe — raw HTML
+      frame.srcdoc = content;
     }
   </script>
-  <script src="https://os.ivabgaming.com/cursor.js"></script>
+
 </body>
 </html>
