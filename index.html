@@ -18,6 +18,7 @@
                     <button class="diff-btn" onclick="document.getElementById('aexePicker').click()">Open AlexOS Executable (.aexe) file</button>
                     <input type="file" id="aexePicker" accept=".aexe" style="display:none">
                     <button class="diff-btn" onclick="openStore()">AlexOS App Store</button>
+                    <button class="diff-btn" onclick="openDraw()">Drawing</button>
                 </div>
             </div>
         </div>
@@ -59,6 +60,10 @@
 
         function openStore() {
             window.location.href = 'store.html';
+        }
+
+        function openDraw() {
+            window.location.href = 'draw.html';
         }
         </script>
 
