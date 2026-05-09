@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    fetch('calc.aexe')
+      .then(r => r.text())
+      .then(content => {
+        sessionStorage.setItem('aexe_content', content);
+        sessionStorage.setItem('aexe_name', 'calc.aexe');
+        sessionStorage.setItem('aexe_type', 'html');
+        window.location.href = 'aexe-runner.html';
+      });
+  </script>
+</head>
+</html>
