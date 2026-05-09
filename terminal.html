@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocusOS Terminal</title>
+    <meta charset="UTF-8"></meta>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f5ff;
+            --neon-pink: #ff006e;
+            --neon-yellow: #ffcc00;
+            --neon-green: #39ff14;
+            --dark-bg: #050510;
+            --grid-color: rgba(0,245,255,0.06);
+            --text: #e0e8ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scanlines {
+            position: fixed; inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+            animation: scanMove 8s linear infinite;
+        }
+        @keyframes scanMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100px; }
+        }
+
+        /* Title bar */
+        .titlebar {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(0,245,255,0.15);
+            background: rgba(5,5,16,0.9);
+        }
+        .titlebar-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px var(--neon-cyan);
+        }
+        .titlebar-back {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            padding: 6px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: rgba(255,255,255,0.4);
+            cursor: none;
+            transition: all 0.2s;
+        }
+        .titlebar-back:hover {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 10px rgba(255,0,110,0.3);
+        }
+
+        /* Terminal output area */
+        .terminal {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,245,255,0.2) transparent;
+        }
+
+        .terminal::-webkit-scrollbar { width: 4px; }
+        .terminal::-webkit-scrollbar-track { background: transparent; }
+        .terminal::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.2); border-radius: 2px; }
+
+        .line {
+            font-size: 0.8rem;
+            line-height: 1.6;
+            animation: fadeIn 0.1s forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .line.prompt { color: var(--neon-cyan); }
+        .line.prompt .cmd-text { color: white; }
+        .line.output { color: rgba(224,232,255,0.6); padding-left: 16px; }
+        .line.success { color: var(--neon-green); padding-left: 16px; }
+        .line.error { color: var(--neon-pink); padding-left: 16px; }
+        .line.warn { color: var(--neon-yellow); padding-left: 16px; }
+        .line.info { color: var(--neon-cyan); padding-left: 16px; opacity: 0.7; }
+
+        /* Input row */
+        .input-row {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-top: 1px solid rgba(0,245,255,0.15);
+            background: rgba(5,5,16,0.9);
+        }
+        .prompt-symbol {
+            color: var(--neon-cyan);
+            font-size: 0.85rem;
+            text-shadow: 0 0 8px var(--neon-cyan);
+            white-space: nowrap;
+        }
+        .cmd-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: white;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            caret-color: var(--neon-cyan);
+            cursor: none;
+        }
+        .run-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            padding: 6px 14px;
+            border: 1px solid rgba(0,245,255,0.3);
+            background: transparent;
+            color: var(--neon-cyan);
+            cursor: none;
+            transition: all 0.2s;
+        }
+        .run-btn:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0,245,255,0.3);
+            background: rgba(0,245,255,0.05);
+        }
+
+        /* Custom cursor */
+        #cursor { position: fixed; pointer-events: none; z-index: 9999; top: 0; left: 0; }
+        #cursor-dot {
+            width: 6px; height: 6px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+        #cursor-cross {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 24px; height: 24px;
+        }
+        #cursor-cross::before, #cursor-cross::after {
+            content: '';
+            position: absolute;
+            background: var(--neon-cyan);
+            opacity: 0.8;
+            box-shadow: 0 0 6px var(--neon-cyan);
+        }
+        #cursor-cross::before { width: 24px; height: 1px; top: 50%; left: 0; transform: translateY(-50%); }
+        #cursor-cross::after { width: 1px; height: 24px; left: 50%; top: 0; transform: translateX(-50%); }
+        body.cursor-hover #cursor-dot { background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink), 0 0 20px var(--neon-pink); }
+        body.cursor-hover #cursor-cross::before,
+        body.cursor-hover #cursor-cross::after { background: var(--neon-pink); box-shadow: 0 0 6px var(--neon-pink); }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <div class="titlebar">
+        <div class="titlebar-title">LOCUSOS — TERMINAL v1.0</div>
+        <button class="titlebar-back" onclick="goHome()">← HOME</button>
+    </div>
+
+    <div class="terminal" id="terminal"></div>
+
+    <div class="input-row">
+        <span class="prompt-symbol">locusos /&gt;</span>
+        <input type="text" class="cmd-input" id="command" placeholder="type a command..." autofocus>
+        <button class="run-btn" onclick="send()">RUN</button>
+    </div>
+
+    <div id="cursor">
+        <div id="cursor-cross"></div>
+        <div id="cursor-dot"></div>
+    </div>
+
+    <script>
+        const commands = {
+            help: () => [
+                { type: 'info', text: '┌─ AVAILABLE COMMANDS ──────────────────────' },
+                { type: 'output', text: '  help           show this message' },
+                { type: 'output', text: '  clear          clear the terminal' },
+                { type: 'output', text: '  exit           return to main menu' },
+                { type: 'output', text: '  aexe           launch AlexOS Executable Launcher' },
+                { type: 'output', text: '  calc           launch Calculator' },
+                { type: 'output', text: '  appstore       launch the App Store' },
+                { type: 'output', text: '  draw           launch AlexOS Draw' },
+                { type: 'output', text: '  version        show OS version' },
+                { type: 'output', text: '  whoami         who are you?' },
+                { type: 'info', text:  '└───────────────────────────────────────────' },
+            ],
+            clear: () => { clearTerminal(); return []; },
+            exit: () => { navigate('index.html'); return [{ type: 'success', text: 'Returning to main menu...' }]; },
+            aexe: () => { navigate('aexe-runner.html'); return [{ type: 'success', text: 'Launching AlexOS Executable Launcher...' }]; },
+            calc: () => { navigate('calc.html'); return [{ type: 'success', text: 'Launching Calculator...' }]; },
+            appstore: () => { navigate('store.html'); return [{ type: 'success', text: 'Launching App Store...' }]; },
+            draw: () => { navigate('../Project Locus Musicae/index.html'); return [{ type: 'success', text: 'Launching AlexOS Draw...' }]; },
+            version: () => [
+                { type: 'info', text: 'AlexOS — built with HTML, CSS & JS' },
+                { type: 'output', text: 'Kernel: LocusKernel 1.0.0 (Modified)' },
+                { type: 'output', text: 'Platform: Browser / USB Drive' },
+            ],
+            whoami: () => [
+                { type: 'output', text: 'user@alexos' },
+            ],
+        };
+
+        function navigate(url) {
+            setTimeout(() => window.location.href = url, 600);
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminal').innerHTML = '';
+        }
+
+        function addLine(type, text) {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.classList.add('line', type);
+            line.textContent = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function send() {
+            const input = document.getElementById('command');
+            const txt = input.value.trim().toLowerCase();
+            input.value = '';
+
+            if (!txt) return;
+
+            // Echo the command
+            const terminal = document.getElementById('terminal');
+            const promptLine = document.createElement('div');
+            promptLine.classList.add('line', 'prompt');
+            promptLine.innerHTML = `locusos /> <span class="cmd-text">${txt}</span>`;
+            terminal.appendChild(promptLine);
+
+            // Run command
+            if (commands[txt]) {
+                const output = commands[txt]();
+                output.forEach(({ type, text }) => addLine(type, text));
+            } else {
+                addLine('error', `command not found: '${txt}' — type 'help' for commands`);
+            }
+
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('command').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') send();
+        });
+
+        // Boot message
+        window.addEventListener('load', () => {
+            addLine('info', 'AlexOS Terminal v1.0');
+            addLine('output', 'Type \'help\' for a list of commands.');
+            addLine('output', '');
+        });
+
+        // Cursor
+        const cursor = document.getElementById('cursor');
+        let mx = 0, my = 0, cx = 0, cy = 0;
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+        function animateCursor() {
+            cx += (mx - cx) * 0.15;
+            cy += (my - cy) * 0.15;
+            cursor.style.transform = `translate(${cx}px, ${cy}px)`;
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+        document.querySelectorAll('button').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+        });
+    </script>
+</body>
+</html>
