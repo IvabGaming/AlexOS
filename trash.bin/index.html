@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>AlexOS</title>
+        <link rel="stylesheet" href="https://os.ivabgaming.com/root.css">
+        <style>
+            .main {
+                height: 100vh;
+                width: 95vw;
+            }
+
+            .sidebar {
+                height: 100vh;
+                width: 5vw;
+            }
+
+            .index {
+                height: 100vh;
+                width: 99vw;
+                display: flex;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="index">
+            <iframe
+                src="sidebar.html"
+                class="sidebar"
+            ></iframe>
+
+            <iframe
+                id="content"
+                src="index.html"
+                class="main">
+            </iframe>
+        </div>
+
+        <script src="https://os.ivabgaming.com/cursor.js"></script>
+    </body>
+</html>
