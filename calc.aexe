@@ -119,10 +119,10 @@
         });
 
         function exit() {
-            window.location.href = 'http://localhost:8080/LocusOS/index.html';
+            window.location.href = 'index.html';
         }
     </script>
 
-    <script src="http://localhost:8080/cursor.js"></script>
+    <script src="https://os.ivabgaming.com/cursor.js"></script>
 </body>
 </html>
